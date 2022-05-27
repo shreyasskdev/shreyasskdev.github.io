@@ -2,7 +2,7 @@ class typeWriter {
 	constructor() {
 		
         this.typeElement = document.querySelector(".discription .type");
-        this.words = ["programming", "3d drawing", "drawing", "crafting"];
+        this.words = ["programming", "3d art", "drawing", "crafting"];
         this.wordIndex = 0;
         this.txt = "";
         this.isDeleting = false;
