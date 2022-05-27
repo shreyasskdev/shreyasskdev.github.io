@@ -51,3 +51,4 @@ class typeWriter {
 
 const typewriter = new typeWriter();
 typewriter.type();
+
